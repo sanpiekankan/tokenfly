@@ -1,0 +1,23 @@
+{
+  "name": "tokenfly",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanpiekankan/tokenfly.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sanpiekankan/tokenfly/issues"
+  },
+  "homepage": "https://github.com/sanpiekankan/tokenfly#readme",
+  "description": "",
+  "dependencies": {
+    "tiktoken": "^1.0.22"
+  }
+}
