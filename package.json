@@ -16,8 +16,5 @@
     "url": "https://github.com/sanpiekankan/tokenfly/issues"
   },
   "homepage": "https://github.com/sanpiekankan/tokenfly#readme",
-  "description": "A lightweight npm package to estimate the number of tokens in a given text when sending it to Large Language Models (LLMs).",
-  "dependencies": {
-    "tiktoken": "^1.0.22"
-  }
+  "description": "A lightweight npm package to estimate the number of tokens in a given text when sending it to Large Language Models (LLMs)."
 }
