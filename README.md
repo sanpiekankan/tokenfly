@@ -12,7 +12,27 @@ npm install tokenfly
 
 ## Usage
 
-Here is a basic example of how to use `tokenfly` to estimate tokens.
+### CLI Usage (Command Line)
+
+If you install `tokenfly` globally (`npm install -g tokenfly`) or use it in an npm script, you can estimate the tokens of a file (e.g., a Markdown prompt file) directly from your terminal:
+
+```bash
+# Using the -count flag
+tokenfly -count prompt.md
+
+# Or simply passing the file path
+tokenfly prompt.md
+```
+
+**Output Example:**
+```
+文件: prompt.md
+预估 Token 数量: 168
+```
+
+### Programmatic Usage
+
+Here is a basic example of how to use `tokenfly` programmatically in Node.js.
 
 ```javascript
 const { estimateTokens } = require('tokenfly');
