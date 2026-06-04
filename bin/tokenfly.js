@@ -12,7 +12,7 @@ function run() {
   const args = process.argv.slice(2);
   
   if (args.length === 0) {
-    console.log("用法: tokenfly -count <文件路径.md>");
+    console.log("Usage: tokenfly -count <file.md>");
     process.exit(1);
   }
 
@@ -31,25 +31,25 @@ function run() {
   }
 
   if (!filePath) {
-    console.error("错误: 未指定文件。用法: tokenfly -count <文件路径.md>");
+    console.error("Error: No file specified. Usage: tokenfly -count <file.md>");
     process.exit(1);
   }
 
-  // 解析绝对路径
+  // Resolve absolute path
   const absolutePath = path.resolve(process.cwd(), filePath);
 
   if (!fs.existsSync(absolutePath)) {
-    console.error(`错误: 找不到文件 ${absolutePath}`);
+    console.error(`Error: File not found at ${absolutePath}`);
     process.exit(1);
   }
 
   try {
     const content = fs.readFileSync(absolutePath, 'utf8');
     const tokenCount = estimateTokens(content);
-    console.log(`文件: ${filePath}`);
-    console.log(`预估 Token 数量: ${tokenCount}`);
+    console.log(`File: ${filePath}`);
+    console.log(`Estimated Token Count: ${tokenCount}`);
   } catch (error) {
-    console.error(`读取文件时出错: ${error.message}`);
+    console.error(`Error reading file: ${error.message}`);
     process.exit(1);
   }
 }

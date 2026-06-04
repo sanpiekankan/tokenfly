@@ -26,8 +26,8 @@ tokenfly prompt.md
 
 **Output Example:**
 ```
-文件: prompt.md
-预估 Token 数量: 168
+File: prompt.md
+Estimated Token Count: 168
 ```
 
 ### Programmatic Usage
