@@ -4,24 +4,38 @@ A lightweight, **zero-dependency** npm package to estimate the number of tokens 
 
 ## Installation
 
-You can install `tokenfly` using npm:
+You can install `tokenfly` locally in your project:
 
 ```bash
 npm install tokenfly
+```
+
+To use the CLI tool globally from anywhere, install it globally:
+
+```bash
+npm install -g tokenfly
 ```
 
 ## Usage
 
 ### CLI Usage (Command Line)
 
-If you install `tokenfly` globally (`npm install -g tokenfly`) or use it in an npm script, you can estimate the tokens of a file (e.g., a Markdown prompt file) directly from your terminal:
+You can estimate the tokens of a file (e.g., a Markdown prompt file, text file, etc.) directly from your terminal.
+
+If installed globally, simply run:
 
 ```bash
-# Using the -count flag
-tokenfly -count prompt.md
-
-# Or simply passing the file path
 tokenfly prompt.md
+
+# Or using the -count flag
+tokenfly -count prompt.md
+```
+
+**Zero-install with npx:**
+If you don't want to install it globally, you can run it directly using `npx`:
+
+```bash
+npx tokenfly prompt.md
 ```
 
 **Output Example:**
@@ -32,15 +46,25 @@ Estimated Token Count: 168
 
 ### Programmatic Usage
 
-Here is a basic example of how to use `tokenfly` programmatically in Node.js.
+You can use `tokenfly` programmatically in Node.js. It supports both CommonJS and ES Modules.
 
+**CommonJS:**
 ```javascript
 const { estimateTokens } = require('tokenfly');
 
 const text = "Hello, world! This is a test text for estimating token count.";
-
-// Estimate tokens
 const tokens = estimateTokens(text);
+
+console.log(`Estimated Token count: ${tokens}`);
+```
+
+**ES Modules:**
+```javascript
+import { estimateTokens } from 'tokenfly';
+
+const text = "Hello, world! This is a test text for estimating token count.";
+const tokens = estimateTokens(text);
+
 console.log(`Estimated Token count: ${tokens}`);
 ```
 
