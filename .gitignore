@@ -4,3 +4,5 @@ example.js
 dist
 coverage
 *.tsbuildinfo
+dev-plan.md
+requirement.md

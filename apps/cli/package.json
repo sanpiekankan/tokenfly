@@ -1,6 +1,6 @@
 {
   "name": "tokenfly",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A lightweight npm package and CLI to estimate prompt token usage and costs.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -24,7 +24,7 @@
     "lint": "eslint src tests --ext .ts"
   },
   "dependencies": {
-    "@tokenfly/core": "1.0.1",
-    "@tokenfly/shared": "1.0.1"
+    "@tokenfly/core": "1.1.0",
+    "@tokenfly/shared": "1.1.0"
   }
 }
