@@ -5,6 +5,9 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "bin": {
     "tokenfly": "./dist/bin.js"
   },
@@ -17,7 +20,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist --tsconfig tsconfig.json && tsup src/bin.ts --format cjs --out-dir dist --clean false --tsconfig tsconfig.json && node -e \"const fs=require('node:fs');const file='dist/bin.js';const content=fs.readFileSync(file,'utf8');if(!content.startsWith('#!/usr/bin/env node')) fs.writeFileSync(file,'#!/usr/bin/env node\\n'+content);\"",
-    "test": "vitest run apps/cli",
+    "test": "vitest run tests",
     "lint": "eslint src tests --ext .ts"
   },
   "dependencies": {

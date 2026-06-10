@@ -5,6 +5,9 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -14,7 +17,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist --tsconfig tsconfig.json",
-    "test": "vitest run packages/shared",
+    "test": "vitest run tests",
     "lint": "eslint src --ext .ts"
   }
 }
