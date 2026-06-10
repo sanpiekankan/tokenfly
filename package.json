@@ -1,23 +1,45 @@
 {
-  "name": "tokenfly",
+  "name": "tokenfly-workspace",
   "version": "1.0.1",
-  "main": "index.js",
-  "bin": {
-    "tokenfly": "./bin/tokenfly.js"
-  },
+  "private": true,
+  "description": "Monorepo workspace for the tokenfly toolchain.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run build -w @tokenfly/shared && npm run build -w @tokenfly/core && npm run build -w tokenfly",
+    "test": "vitest run",
+    "lint": "eslint . --ext .ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf packages/*/dist apps/*/dist coverage"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sanpiekankan/tokenfly.git"
   },
-  "keywords": [],
+  "keywords": [
+    "token",
+    "llm",
+    "cost",
+    "cli"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/sanpiekankan/tokenfly/issues"
   },
   "homepage": "https://github.com/sanpiekankan/tokenfly#readme",
-  "description": "A lightweight npm package to estimate the number of tokens in a given text when sending it to Large Language Models (LLMs)."
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@types/node": "^24.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.34.1",
+    "@typescript-eslint/parser": "^8.34.1",
+    "eslint": "^9.29.0",
+    "globals": "^16.2.0",
+    "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
 }

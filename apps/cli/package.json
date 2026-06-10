@@ -1,0 +1,27 @@
+{
+  "name": "tokenfly",
+  "version": "1.0.1",
+  "description": "A lightweight npm package and CLI to estimate prompt token usage and costs.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "tokenfly": "./dist/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist --tsconfig tsconfig.json && tsup src/bin.ts --format cjs --out-dir dist --clean false --tsconfig tsconfig.json && node -e \"const fs=require('node:fs');const file='dist/bin.js';const content=fs.readFileSync(file,'utf8');if(!content.startsWith('#!/usr/bin/env node')) fs.writeFileSync(file,'#!/usr/bin/env node\\n'+content);\"",
+    "test": "vitest run apps/cli",
+    "lint": "eslint src tests --ext .ts"
+  },
+  "dependencies": {
+    "@tokenfly/core": "1.0.1",
+    "@tokenfly/shared": "1.0.1"
+  }
+}
