@@ -1,4 +1,5 @@
 import type { BudgetCheckResult } from "@tokenfly/core";
+import type { Logger } from "@tokenfly/shared";
 
 export type BudgetEnforcementMode = "block" | "recommend_downgrade";
 
@@ -10,8 +11,15 @@ export interface BudgetRuleInput {
   estimatedCost: number;
   selectedModel?: string;
   fallbackModel?: string;
+  downgradeCandidates?: BudgetDowngradeCandidate[];
   warningThreshold?: number;
   mode?: BudgetEnforcementMode;
+}
+
+export interface BudgetDowngradeCandidate {
+  model: string;
+  estimatedCost: number;
+  reason?: string;
 }
 
 export interface TaskValueAssessment {
@@ -44,6 +52,7 @@ export interface BudgetRuleEvaluation {
   decision: BudgetDecision;
   reason: string;
   recommendedModel?: string;
+  recommendedCost?: number;
 }
 
 export interface BudgetEnforcementResult {
@@ -51,10 +60,27 @@ export interface BudgetEnforcementResult {
   decision: BudgetDecision;
   reason: string;
   estimatedCost: number;
+  finalCost: number;
   recommendedModel?: string;
+  finalModel?: string;
+  downgraded: boolean;
   taskValue: TaskValueAssessment;
   budgetCheck: BudgetCheckResult;
   evaluations: BudgetRuleEvaluation[];
+  logEntry: BudgetLogEntry;
+}
+
+export interface BudgetLogEntry {
+  taskType: string;
+  budgetLimit: number;
+  estimatedCost: number;
+  finalCost: number;
+  selectedModel?: string;
+  finalModel?: string;
+  recommendedModel?: string;
+  downgraded: boolean;
+  blocked: boolean;
+  decision: BudgetDecision;
 }
 
 export interface BudgetRule {
@@ -65,4 +91,5 @@ export interface BudgetRule {
 export interface BudgetOptions {
   taskValueFunction?: TaskValueFunction;
   rules?: BudgetRule[];
+  logger?: Logger;
 }

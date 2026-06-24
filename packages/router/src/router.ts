@@ -22,6 +22,7 @@ const DEFAULT_MODEL_CAPABILITIES: Record<string, ModelCapabilityProfile> = {
     qualityTier: 5,
     speedTier: 2,
     costTier: 1,
+    latencyMs: 1800,
     maxRecommendedInputTokens: 8192
   },
   "gpt-3.5-turbo": {
@@ -29,6 +30,7 @@ const DEFAULT_MODEL_CAPABILITIES: Record<string, ModelCapabilityProfile> = {
     qualityTier: 3,
     speedTier: 5,
     costTier: 5,
+    latencyMs: 700,
     maxRecommendedInputTokens: 16385
   }
 };
@@ -76,6 +78,51 @@ function resolveRouterWeights(
     ...DEFAULT_SCORE_WEIGHTS,
     ...scoreWeights
   };
+}
+
+function normalizeTier(value: number): number {
+  return value / 5;
+}
+
+function resolveTaskTypeFitScore(
+  taskType: string,
+  model: string,
+  preferences: Record<string, string[]>
+): number {
+  const preferredModels = preferences[normalizeTaskType(taskType)] ?? [];
+  const preferredIndex = preferredModels.indexOf(model);
+
+  if (preferredIndex === -1 || preferredModels.length === 0) {
+    return 0;
+  }
+
+  return (preferredModels.length - preferredIndex) / preferredModels.length;
+}
+
+function resolveComplexityAlignmentScore(
+  context: RoutingRuleContext
+): number {
+  const qualityScore = normalizeTier(context.capability.qualityTier);
+  const speedScore = normalizeTier(context.capability.speedTier);
+  const costScore = normalizeTier(context.capability.costTier);
+
+  if (context.complexity.level === "high") {
+    return qualityScore;
+  }
+
+  if (context.complexity.level === "medium") {
+    return (qualityScore + speedScore) / 2;
+  }
+
+  return (speedScore + costScore) / 2;
+}
+
+function resolveLatencyScore(capability: ModelCapabilityProfile): number {
+  if (capability.latencyMs && capability.latencyMs > 0) {
+    return 1 / (1 + capability.latencyMs / 1000);
+  }
+
+  return normalizeTier(capability.speedTier);
 }
 
 function buildRoutingContext(
@@ -226,8 +273,8 @@ export function createBudgetRoutingRule(
       if (context.input.budgetLimit === undefined) {
         return {
           rule: "budget-fit",
-          score: context.capability.costTier * 0.25 * weights.cost,
-          reason: `No budget limit was provided, so model "${context.modelPricing.model}" keeps its cost-tier baseline.`
+          score: 0,
+          reason: `No budget limit was provided, so model "${context.modelPricing.model}" receives no explicit budget bonus or penalty.`
         };
       }
 
@@ -245,8 +292,7 @@ export function createBudgetRoutingRule(
         context.input.budgetLimit === 0
           ? 0
           : budgetGap / context.input.budgetLimit;
-      const score =
-        (context.capability.costTier + budgetHeadroomRatio * 2) * weights.cost;
+      const score = Math.min(budgetHeadroomRatio, 1) * 0.75 * weights.cost;
 
       return {
         rule: "budget-fit",
@@ -324,6 +370,63 @@ export function createQualityPreferenceRoutingRule(
 }
 
 /**
+ * Creates a weighted cost-quality-latency score for first-pass rule-based routing.
+ *
+ * @param scoreWeights - Optional routing score weight overrides.
+ * @param preferences - Optional task-to-model preference overrides.
+ * @returns A routing rule that blends cost, quality, latency, task fit, and complexity alignment.
+ */
+export function createWeightedScoreRoutingRule(
+  scoreWeights?: Partial<RouterScoreWeights>,
+  preferences: Record<string, string[]> = TASK_TYPE_MODEL_PREFERENCES
+): RoutingRule {
+  const weights = resolveRouterWeights(scoreWeights);
+
+  return {
+    name: "weighted-score",
+    evaluate(context) {
+      const qualityPreference = context.input.qualityPreference ?? "balanced";
+      const qualityMultiplier =
+        qualityPreference === "quality"
+          ? 1.35
+          : qualityPreference === "speed"
+            ? 0.75
+            : 1;
+      const latencyMultiplier =
+        qualityPreference === "speed"
+          ? 1.35
+          : qualityPreference === "quality"
+            ? 0.75
+            : 1;
+      const costMultiplier =
+        context.input.budgetLimit === undefined ? 0.85 : 1;
+      const qualityScore = normalizeTier(context.capability.qualityTier);
+      const costScore = normalizeTier(context.capability.costTier);
+      const latencyScore = resolveLatencyScore(context.capability);
+      const taskTypeFitScore = resolveTaskTypeFitScore(
+        context.input.taskType,
+        context.modelPricing.model,
+        preferences
+      );
+      const complexityAlignmentScore =
+        resolveComplexityAlignmentScore(context);
+      const score =
+        qualityScore * weights.quality * qualityMultiplier +
+        costScore * weights.cost * costMultiplier +
+        latencyScore * weights.latency * latencyMultiplier +
+        taskTypeFitScore * weights.taskType +
+        complexityAlignmentScore * weights.complexity;
+
+      return {
+        rule: "weighted-score",
+        score,
+        reason: `Weighted score combines cost ${costScore.toFixed(2)}, quality ${qualityScore.toFixed(2)}, latency ${latencyScore.toFixed(2)}, task fit ${taskTypeFitScore.toFixed(2)}, and complexity alignment ${complexityAlignmentScore.toFixed(2)} for model "${context.modelPricing.model}".`
+      };
+    }
+  };
+}
+
+/**
  * Builds the default rule set for the first router implementation.
  *
  * @param scoreWeights - Optional routing score weight overrides.
@@ -333,6 +436,7 @@ export function createDefaultRoutingRules(
   scoreWeights?: Partial<RouterScoreWeights>
 ): RoutingRule[] {
   return [
+    createWeightedScoreRoutingRule(scoreWeights),
     createTaskTypeRoutingRule(undefined, scoreWeights),
     createBudgetRoutingRule(scoreWeights),
     createComplexityRoutingRule(scoreWeights),

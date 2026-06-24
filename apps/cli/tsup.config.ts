@@ -7,7 +7,12 @@ export default defineConfig([
     dts: true,
     outDir: "dist",
     tsconfig: "tsconfig.json",
-    noExternal: ["@tokenfly/core", "@tokenfly/shared"],
+    noExternal: [
+      "@tokenfly/core",
+      "@tokenfly/shared",
+      "@tokenfly/router",
+      "@tokenfly/budget"
+    ],
     minify: true,
     clean: true
   },
@@ -17,7 +22,12 @@ export default defineConfig([
     dts: false,
     outDir: "dist",
     tsconfig: "tsconfig.json",
-    noExternal: ["@tokenfly/core", "@tokenfly/shared"],
+    noExternal: [
+      "@tokenfly/core",
+      "@tokenfly/shared",
+      "@tokenfly/router",
+      "@tokenfly/budget"
+    ],
     minify: true,
     clean: false
   }

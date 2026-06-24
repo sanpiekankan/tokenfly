@@ -1,7 +1,9 @@
 import { checkBudget } from "@tokenfly/core";
 import type {
   BudgetDecision,
+  BudgetDowngradeCandidate,
   BudgetEnforcementResult,
+  BudgetLogEntry,
   BudgetOptions,
   BudgetRule,
   BudgetRuleInput,
@@ -27,6 +29,71 @@ function clampValueScore(value: number): number {
   return Math.max(0, Math.min(value, 1));
 }
 
+function resolveAffordableDowngradeCandidate(
+  input: BudgetRuleInput
+): BudgetDowngradeCandidate | undefined {
+  return input.downgradeCandidates?.find(
+    (candidate) => candidate.estimatedCost <= input.budgetLimit
+  );
+}
+
+function createBudgetLogEntry(
+  input: BudgetRuleInput,
+  decision: BudgetDecision,
+  finalModel: string | undefined,
+  finalCost: number,
+  recommendedModel?: string
+): BudgetLogEntry {
+  return {
+    taskType: input.taskType,
+    budgetLimit: input.budgetLimit,
+    estimatedCost: input.estimatedCost,
+    finalCost,
+    selectedModel: input.selectedModel,
+    finalModel,
+    recommendedModel,
+    downgraded:
+      Boolean(input.selectedModel) &&
+      Boolean(finalModel) &&
+      input.selectedModel !== finalModel,
+    blocked: decision === "block",
+    decision
+  };
+}
+
+function logBudgetDecision(
+  result: BudgetEnforcementResult,
+  options: BudgetOptions
+): void {
+  if (!options.logger) {
+    return;
+  }
+
+  const payload = {
+    taskType: result.logEntry.taskType,
+    budgetLimit: result.logEntry.budgetLimit,
+    estimatedCost: result.logEntry.estimatedCost,
+    finalCost: result.logEntry.finalCost,
+    selectedModel: result.logEntry.selectedModel,
+    finalModel: result.logEntry.finalModel,
+    recommendedModel: result.logEntry.recommendedModel,
+    downgraded: result.logEntry.downgraded,
+    blocked: result.logEntry.blocked
+  };
+
+  if (result.decision === "block") {
+    options.logger.warn("Budget strategy blocked a request.", payload);
+    return;
+  }
+
+  if (result.decision === "recommend_downgrade") {
+    options.logger.info("Budget strategy selected a downgrade path.", payload);
+    return;
+  }
+
+  options.logger.debug("Budget strategy allowed a request.", payload);
+}
+
 function buildAllowResult(
   input: BudgetRuleInput,
   taskValue: TaskValueAssessment
@@ -37,15 +104,26 @@ function buildAllowResult(
     taskType: input.taskType,
     warningThreshold: input.warningThreshold
   });
+  const finalModel = input.selectedModel;
+  const logEntry = createBudgetLogEntry(
+    input,
+    "allow",
+    finalModel,
+    input.estimatedCost
+  );
 
   return {
     allowed: true,
     decision: "allow",
     reason: budgetCheck.reason,
     estimatedCost: input.estimatedCost,
+    finalCost: input.estimatedCost,
+    finalModel,
+    downgraded: false,
     taskValue,
     budgetCheck,
-    evaluations: []
+    evaluations: [],
+    logEntry
   };
 }
 
@@ -112,8 +190,11 @@ export function createDowngradeBudgetRule(
       const shouldRecommend =
         context.input.mode === "recommend_downgrade" ||
         context.taskValue.score >= minTaskValueScore;
+      const affordableCandidate = resolveAffordableDowngradeCandidate(
+        context.input
+      );
 
-      if (!shouldRecommend || !context.input.fallbackModel) {
+      if (!shouldRecommend || !affordableCandidate) {
         return {
           rule: "recommend-downgrade",
           triggered: false,
@@ -127,7 +208,8 @@ export function createDowngradeBudgetRule(
         triggered: true,
         decision: "recommend_downgrade",
         reason: `Estimated cost exceeds budget, but task value ${context.taskValue.score.toFixed(2)} justifies a downgrade recommendation.`,
-        recommendedModel: context.input.fallbackModel
+        recommendedModel: affordableCandidate.model,
+        recommendedCost: affordableCandidate.estimatedCost
       };
     }
   };
@@ -198,7 +280,9 @@ export function enforceBudget(
   });
 
   if (budgetCheck.status !== "block") {
-    return buildAllowResult(input, taskValue);
+    const result = buildAllowResult(input, taskValue);
+    logBudgetDecision(result, options);
+    return result;
   }
 
   const rules = options.rules ?? createDefaultBudgetRules();
@@ -216,15 +300,39 @@ export function enforceBudget(
       decision: "block" as BudgetDecision,
       reason: budgetCheck.reason
     };
-
-  return {
+  const finalModel =
+    finalEvaluation.decision === "recommend_downgrade"
+      ? finalEvaluation.recommendedModel ?? input.selectedModel
+      : input.selectedModel;
+  const finalCost =
+    finalEvaluation.decision === "recommend_downgrade"
+      ? finalEvaluation.recommendedCost ?? input.estimatedCost
+      : input.estimatedCost;
+  const result: BudgetEnforcementResult = {
     allowed: finalEvaluation.decision !== "block",
     decision: finalEvaluation.decision,
     reason: finalEvaluation.reason,
     estimatedCost: input.estimatedCost,
+    finalCost,
     recommendedModel: finalEvaluation.recommendedModel,
+    finalModel,
+    downgraded:
+      Boolean(input.selectedModel) &&
+      Boolean(finalModel) &&
+      input.selectedModel !== finalModel,
     taskValue,
     budgetCheck,
-    evaluations
+    evaluations,
+    logEntry: createBudgetLogEntry(
+      input,
+      finalEvaluation.decision,
+      finalModel,
+      finalCost,
+      finalEvaluation.recommendedModel
+    )
   };
+
+  logBudgetDecision(result, options);
+
+  return result;
 }

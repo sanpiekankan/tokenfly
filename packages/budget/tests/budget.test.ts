@@ -21,12 +21,21 @@ describe("@tokenfly/budget", () => {
       budgetLimit: 0.01,
       estimatedCost: 0.02,
       selectedModel: "gpt-4",
-      fallbackModel: "gpt-3.5-turbo"
+      fallbackModel: "gpt-3.5-turbo",
+      downgradeCandidates: [
+        {
+          model: "gpt-3.5-turbo",
+          estimatedCost: 0.005
+        }
+      ]
     });
 
     expect(result.allowed).toBe(true);
     expect(result.decision).toBe("recommend_downgrade");
     expect(result.recommendedModel).toBe("gpt-3.5-turbo");
+    expect(result.finalModel).toBe("gpt-3.5-turbo");
+    expect(result.downgraded).toBe(true);
+    expect(result.finalCost).toBe(0.005);
   });
 
   it("supports injected task-value functions for custom downgrade policies", () => {
@@ -42,7 +51,13 @@ describe("@tokenfly/budget", () => {
         budgetLimit: 0.01,
         estimatedCost: 0.02,
         selectedModel: "gpt-4",
-        fallbackModel: "gpt-3.5-turbo"
+        fallbackModel: "gpt-3.5-turbo",
+        downgradeCandidates: [
+          {
+            model: "gpt-3.5-turbo",
+            estimatedCost: 0.006
+          }
+        ]
       },
       {
         taskValueFunction
@@ -51,5 +66,18 @@ describe("@tokenfly/budget", () => {
 
     expect(result.decision).toBe("recommend_downgrade");
     expect(result.taskValue.reason).toContain("custom business policy");
+  });
+
+  it("emits a structured budget log entry for callers to persist", () => {
+    const result = enforceBudget({
+      taskType: "classification",
+      budgetLimit: 0.01,
+      estimatedCost: 0.02,
+      selectedModel: "gpt-4"
+    });
+
+    expect(result.logEntry.taskType).toBe("classification");
+    expect(result.logEntry.blocked).toBe(true);
+    expect(result.logEntry.estimatedCost).toBe(0.02);
   });
 });

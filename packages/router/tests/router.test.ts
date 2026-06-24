@@ -6,12 +6,17 @@ describe("@tokenfly/router", () => {
     const result = routeModel({
       taskType: "code_generation",
       estimatedInputTokens: 4000,
+      budgetLimit: 0.2,
       qualityPreference: "quality"
     });
 
     expect(result.selectedModel).toBe("gpt-4");
     expect(result.complexity.level).toBe("high");
-    expect(result.candidates[0]?.scoreDetails.some((detail) => detail.rule === "complexity")).toBe(true);
+    expect(
+      result.candidates[0]?.scoreDetails.some(
+        (detail) => detail.rule === "weighted-score"
+      )
+    ).toBe(true);
   });
 
   it("prefers cheaper models when the budget is tight", () => {
@@ -25,6 +30,18 @@ describe("@tokenfly/router", () => {
     expect(result.selectedModel).toBe("gpt-3.5-turbo");
     expect(result.candidates[0]?.estimatedCost).toBeLessThan(
       result.candidates[1]?.estimatedCost ?? Number.POSITIVE_INFINITY
+    );
+  });
+
+  it("returns candidates sorted by descending total score", () => {
+    const result = routeModel({
+      taskType: "reasoning",
+      estimatedInputTokens: 2000,
+      qualityPreference: "balanced"
+    });
+
+    expect(result.candidates[0]?.totalScore).toBeGreaterThanOrEqual(
+      result.candidates[1]?.totalScore ?? Number.NEGATIVE_INFINITY
     );
   });
 

@@ -15,6 +15,7 @@ export interface ModelCapabilityProfile {
   qualityTier: number;
   speedTier: number;
   costTier: number;
+  latencyMs?: number;
   maxRecommendedInputTokens?: number;
 }
 
