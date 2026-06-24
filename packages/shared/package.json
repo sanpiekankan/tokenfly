@@ -1,6 +1,6 @@
 {
   "name": "@tokenfly/shared",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Shared utilities for the tokenfly workspace.",
   "main": "./dist/index.js",
