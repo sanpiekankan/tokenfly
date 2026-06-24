@@ -19,6 +19,8 @@
     }
   },
   "scripts": {
+    "prepack": "node ./scripts/sync-readme.mjs sync",
+    "postpack": "node ./scripts/sync-readme.mjs clean",
     "build": "tsup --config tsup.config.ts && node -e \"const fs=require('node:fs');const file='dist/bin.js';const content=fs.readFileSync(file,'utf8').replace(/^#!\\/usr\\/bin\\/env node\\n+/,'');fs.writeFileSync(file,'#!/usr/bin/env node\\n'+content);\"",
     "test": "vitest run tests",
     "lint": "eslint src tests --ext .ts"
