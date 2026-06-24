@@ -1,0 +1,28 @@
+{
+  "name": "@tokenfly/budget",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Rule-based budget enforcement for the tokenfly workspace.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --out-dir dist --tsconfig tsconfig.json",
+    "test": "vitest run tests",
+    "lint": "eslint src tests --ext .ts"
+  },
+  "dependencies": {
+    "@tokenfly/core": "1.1.0",
+    "@tokenfly/shared": "1.1.0"
+  }
+}

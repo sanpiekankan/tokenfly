@@ -15,7 +15,9 @@
     "baseUrl": ".",
     "paths": {
       "@tokenfly/core": ["packages/core/src/index.ts"],
-      "@tokenfly/shared": ["packages/shared/src/index.ts"]
+      "@tokenfly/shared": ["packages/shared/src/index.ts"],
+      "@tokenfly/router": ["packages/router/src/index.ts"],
+      "@tokenfly/budget": ["packages/budget/src/index.ts"]
     },
     "types": ["node", "vitest/globals"]
   },
